@@ -52,6 +52,12 @@ O fluxo transacional da **US-1 (Desbloqueio e Cobrança de Viagem)** exige o cum
 
 ## 6. Conascencia
 
+| # | Componentes | Tipo de conascência | Força | Localidade | Grau | Descrição | Ação para reduzir |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | `dock_gateway` <-> `trip_management` | Dinâmica: execução e identidade | Alta  | Entre componentes (distante) | 2 componentes, mas afeta todas as viagens | A viagem só pode fechar depois de a doca confirmar o encaixe, e o mesmo evento reenviado (US-3) tem de corresponder sempre à mesma viagem, para não a duplicar. | Identificador único por evento, gerado na doca. Desduplicação em `dock_gateway` e operação de fecho idempotente em `trip_management` (segunda linha de defesa). Registar em ADR. |
+| 2 | `trip_management` <-> `payment_invoicing` | Estática: tipo e significado | Média | Entre componentes (distante) | 2 componentes | Ambos têm de concordar sobre os dados de uma viagem terminada (duração, tipo de utilizador, ID) e sobre o significado de cada campo (por exemplo, se a duração está em segundos ou em minutos). | Contrato explícito e tipado em `common` (uma classe imutável `TripSummary`)(`duration_minutes`). |
+| 3 | `payment_invoicing` <-> `tariff_pricing` | Estática: posição e significado | Média | Entre componentes (distante) | 2 componentes | Se o cálculo do preço receber parâmetros soltos (`calc(52, "annual")`), os dois lados dependem da ordem dos argumentos e do significado do texto `"annual"`. | Passar um objeto tipado (`PricingRequest`) com enumeração para o tipo de passe. A conascência desce para nome e tipo, que são as formas mais fracas. |
+
 ## 7. Iteração de Reestruturação
 
 Nesta iteração, **3 componentes iniciais genéricos foram desdobrados**:
