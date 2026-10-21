@@ -53,3 +53,23 @@ O fluxo transacional da **US-1 (Desbloqueio e Cobrança de Viagem)** exige o cum
 ## 6. Conascencia
 
 ## 7. Iteração de Reestruturação
+
+Nesta iteração, **3 componentes iniciais genéricos foram desdobrados**:
+
+```text
+[ ARQUITETURA INICIAL ]                         [ REESTRUTURAÇÃO (REFINADA) ]
+
+┌────────────────────────┐                    ┌───────────────────────────────┐
+│     station_dock       │ ──(Tolerância)───> │ dock_gateway                  │
+│  (Estações e Docas)    │ ──(Desempenho)───> │ station_inventory             │
+└────────────────────────┘                    └───────────────────────────────┘
+
+┌────────────────────────┐                     ┌───────────────────────────────┐
+│    billing_payment     │ ──(Extensibilidade)>│ tariff_pricing                │
+│  (Faturação e Cobrança)│ ──(Segurança)─>     │ payment_invoicing             │
+└────────────────────────┘                     └───────────────────────────────┘
+
+┌────────────────────────┐                    ┌───────────────────────────────┐
+│   fleet_maintenance    │ ──(Escalabilidade)>│ fleet_health                  │
+│  (Gestão Manutenção)   │ ──(Workflow)────>  │ maintenance_orders            │
+└────────────────────────┘                    └───────────────────────────────┘
