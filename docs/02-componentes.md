@@ -29,3 +29,7 @@ A abordagem escolhida foi Actor/Action para realizar a primeira identificação 
 | **US-5:** Consultar mapa em tempo real de bicicletas e docas livres | `station_dock` | - |
 | **US-6:** Sugerir rotas às carrinhas para equilibrar a ocupação | `rebalancing` | `station_dock` |
 | **US-7:** Consultar histórico de viagens e faturas | `user_account` | `trip_management`, `billing_payment` |
+
+## Conascencia
+
+## Iteração de Reestruturação
