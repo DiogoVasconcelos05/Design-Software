@@ -46,3 +46,6 @@ O fluxo transacional da **US-1 (Desbloqueio e Cobrança de Viagem)** exige o cum
    O `trip_management` necessita de invocar sincronicamente o `user_account` para validar a validade da anuidade/passe **antes** de emitir a ordem de abertura física à doca em `station_dock`. Se a ordem for invertida, a bicicleta pode ser libertada para um utilizador sem passe válido ou suspenso.
 2. **Fecho da Transação e Cobrança:**
    A devolução da bicicleta (confirmada pelo `station_dock`) obriga a que o `trip_management` determine a duração exata da viagem **antes** de disparar o cálculo e cobrança de blocos de 15 minutos em `billing_payment`. A cobrança e a emissão de fatura constituem a unidade final da transação de devolução.
+## Conascencia
+
+## Iteração de Reestruturação
