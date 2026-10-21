@@ -101,10 +101,9 @@ Retângulo = componente; cilindro = armazenamento; seta contínua = chamada sín
 | Base de dados | Servidores backend / cloud | 
 | Fornecedor de pagamentos e AT | Serviços externos |
 
-#### Codeowners (WIP)
+#### Codeowners
 | Componente | Responsável |
 |---|---|
-| `user_account`, `dock_gateway` | Rodrigo |
-| `payment_invoicing`, `tariff_pricing`, `identity_access` | Diogo |
-| `station_inventory`, `fleet_health`, `maintenance_orders`, `redistribution_planning`, `municipal_reporting` | joe |
-| `shared_kernel`, `api`, `tests/architecture/` | joe |
+| `trip_management`, `dock_gateway`, `station_inventory`, `identity_access` | Diogo |
+| `payment_invoicing`, `tariff_pricing`, `fleet_health`, `maintenance_orders`, `redistribution_planning`, `municipal_reporting` | Rodrigo |
+| `common`, `api` | Ambos |
