@@ -8,27 +8,30 @@ A abordagem escolhida foi Actor/Action para realizar a primeira identificação 
 
 ## 2. Atores, Ações e Componentes Identificados
 
-| Ator | Ação no Sistema | Componente Lógico Resultante | Responsabilidade Única (1 Frase) |
+| Ator | Ação / Evento no Sistema | Componente Lógico Resultante | Responsabilidade Única (1 Frase) |
 | :--- | :--- | :--- | :--- |
-| **Assinante / Ocasional** | Registar conta, gerir passe anual, consultar histórico e faturas | `user_account` | Gestão de perfis de utilizadores, subscrições de passes anuais e histórico pessoal. |
-| **Assinante / Ocasional** | Solicitar desbloqueio da bicicleta (QR/Navegante) e terminar viagem | `trip_management` | Controlo do ciclo de vida das viagens, validação de autorização e registo do percurso. |
-| **Doca / Estação (Ator Físico)** | Validar encaixe, monitorizar ocupação, operar em modo offline e retransmitir eventos | `station_dock` | Gestão do estado físico das estações, estado das docas e sincronização autónoma. |
-| **Sistema Central (Ator)** | Calcular tarifário (45 min grátis / blocos 15 min), cobrar via MB WAY/cartão e emitir faturas à AT | `billing_payment` | Processamento do cálculo de tarifas, integração com gateways de pagamento e emissão fiscal. |
-| **Técnico de Manutenção** | Registar avaria manual ou receber alerta automático (bateria/travões) e gerir ordens | `fleet_maintenance` | Gestão de ordens de trabalho de manutenção e estado de operacionalidade da frota. |
-| **Equipa de Carrinha** | Consultar sugestões de rotas para equilibrar a ocupação das estações | `rebalancing` | Otimização e recomendação de rotas de redistribuição de bicicletas entre estações. |
-| **Gestor Municipal** | Gerar relatórios mensais por freguesia e calcular CO₂ evitado | `reporting_analytics` | Agregação analítica e geração de relatórios de utilização para a Câmara Municipal. |
+| **Assinante / Ocasional** | Autenticar utilizador, validar passe/cartão Navegante e QR Code | `identity_access` | Gestão de identidade, autenticação e validação de elegibilidade de passes/cartões. |
+| **Assinante / Ocasional** | Solicitar desbloqueio, monitorizar viagem e registar devolução | `trip_management` | Orquestração e controlo da máquina de estados e ciclo de vida da viagem. |
+| **Doca / Estação (Ator)** | Transmitir eventos físicos, operar offline (24h) e reenviar na reconexão | `dock_gateway` | Ponto de entrada de eventos das docas, resiliência offline e desduplicação. |
+| **Utilizador / Sistema** | Consultar disponibilidade de bicicletas/docas livres em tempo real | `station_inventory` | Gestão do estado de ocupação das estações e exposição de dados em tempo real. |
+| **Sistema Central** | Calcular o valor da viagem com base no tempo decorrido e regras do passe | `tariff_pricing` | Motor de cálculo puro de tarifários e regras de tempo excedente. |
+| **Sistema Central** | Processar pagamento (MB WAY/Cartão), emitir fatura e comunicar à AT | `payment_invoicing` | Processamento de transações financeiras, faturação e integração fiscal. |
+| **Bicicleta Elétrica** | Enviar dados de telemetria a cada 30s e alertar falhas de bateria/travões | `fleet_health` | Ingestão e análise contínua de telemetria para deteção de anomalias na frota. |
+| **Técnico / Utilizador** | Abrir, atribuir e acompanhar ordens de reparação | `maintenance_orders` | Gestão do fluxo de trabalho das ordens de manutenção para os técnicos. |
+| **Carrinha de Transporte** | Receber sugestões de rotas para equilíbrio de bicicletas nas estações | `redistribution_planning` | Cálculo e recomendação de rotas otimizadas para redistribuição da frota. |
+| **Gestor Municipal** | Consultar métricas mensais de utilização por freguesia e CO₂ evitado | `municipal_reporting` | Agregação e geração de relatórios analíticos para a Câmara Municipal. |
 
 ## 3. Mapeamento User Story → Componente
 
-| User Story do Enunciado | Componente Principal | Componentes Secundários Envolvidos |
-| :--- | :--- | :--- |
-| **US-1:** Desbloquear e devolver bicicleta com registo e cobrança | `trip_management` | `user_account`, `station_dock`, `billing_payment` |
-| **US-2:** Receber ordem de manutenção quando a bicicleta reporta avaria | `fleet_maintenance` | `station_dock` |
-| **US-3:** Doca sem rede reenviar eventos guardados sem duplicar viagens | `station_dock` | `trip_management` |
-| **US-4:** Gestor municipal obter relatório por freguesia e CO₂ | `reporting_analytics` | `trip_management`, `station_dock` |
-| **US-5:** Consultar mapa em tempo real de bicicletas e docas livres | `station_dock` | - |
-| **US-6:** Sugerir rotas às carrinhas para equilibrar a ocupação | `rebalancing` | `station_dock` |
-| **US-7:** Consultar histórico de viagens e faturas | `user_account` | `trip_management`, `billing_payment` |
+| Referência | User Story / Requisito do Enunciado | Componente Principal | Componentes Secundários Envolvidos |
+| :--- | :--- | :--- | :--- |
+| **US-1** *(Obrigatória)* | Como **assinante**, desbloqueio e devolvo uma bicicleta e a viagem fica registada e cobrada. | `trip_management` | `identity_access`, `dock_gateway`, `tariff_pricing`, `payment_invoicing` |
+| **US-2** | Como **técnico**, recebo uma ordem de manutenção quando uma bicicleta reporta avaria. | `maintenance_orders` | `fleet_health`, `dock_gateway` |
+| **US-3** | Como **doca sem rede**, reenvio os eventos guardados quando a rede volta, sem duplicar viagens. | `dock_gateway` | `trip_management` |
+| **US-4** | Como **gestor municipal**, obtenho o relatório de utilização por freguesia. | `municipal_reporting` | `trip_management`, `station_inventory` |
+| *(Req. 4)* | Como **utilizador**, consulto o mapa em tempo real com bicicletas e docas livres. | `station_inventory` | `dock_gateway` |
+| *(Req. 6)* | Como **equipa de carrinha**, recebo sugestões de rotas para equilibrar a ocupação das estações. | `redistribution_planning` | `station_inventory` |
+| *(Req. 8)* | Como **utilizador**, consulto o meu histórico de viagens e as faturas emitidas. | `identity_access` | `trip_management`, `payment_invoicing` |
 
 ## 4. Análise de Coesão, Acoplamento e Instabilidade
 
