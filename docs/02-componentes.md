@@ -17,3 +17,15 @@ A abordagem escolhida foi Actor/Action para realizar a primeira identificação 
 | **Técnico de Manutenção** | Registar avaria manual ou receber alerta automático (bateria/travões) e gerir ordens | `fleet_maintenance` | Gestão de ordens de trabalho de manutenção e estado de operacionalidade da frota. |
 | **Equipa de Carrinha** | Consultar sugestões de rotas para equilibrar a ocupação das estações | `rebalancing` | Otimização e recomendação de rotas de redistribuição de bicicletas entre estações. |
 | **Gestor Municipal** | Gerar relatórios mensais por freguesia e calcular CO₂ evitado | `reporting_analytics` | Agregação analítica e geração de relatórios de utilização para a Câmara Municipal. |
+
+## 3. Mapeamento User Story → Componente
+
+| User Story do Enunciado | Componente Principal | Componentes Secundários Envolvidos |
+| :--- | :--- | :--- |
+| **US-1:** Desbloquear e devolver bicicleta com registo e cobrança | `trip_management` | `user_account`, `station_dock`, `billing_payment` |
+| **US-2:** Receber ordem de manutenção quando a bicicleta reporta avaria | `fleet_maintenance` | `station_dock` |
+| **US-3:** Doca sem rede reenviar eventos guardados sem duplicar viagens | `station_dock` | `trip_management` |
+| **US-4:** Gestor municipal obter relatório por freguesia e CO₂ | `reporting_analytics` | `trip_management`, `station_dock` |
+| **US-5:** Consultar mapa em tempo real de bicicletas e docas livres | `station_dock` | - |
+| **US-6:** Sugerir rotas às carrinhas para equilibrar a ocupação | `rebalancing` | `station_dock` |
+| **US-7:** Consultar histórico de viagens e faturas | `user_account` | `trip_management`, `billing_payment` |
