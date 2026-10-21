@@ -5,4 +5,4 @@ Membros do Grupo:
 * Diogo Vasconcelos nº61809
 * Rodrigo Santos nº61825
 
-Para crítica da especificação foi usado o Gemini flash 3.6.
+Para crítica da especificação foi usado o Gemini flash 3.6 e Claude Opus 5.5.
