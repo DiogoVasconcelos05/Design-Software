@@ -8,7 +8,7 @@ A abordagem escolhida foi Actor/Action para realizar a primeira identificação 
 
 ## 2. Atores, Ações e Componentes Identificados
 
-| Ator | Ação / Evento no Sistema | Componente Lógico Resultante | Responsabilidade Única (1 Frase) |
+| Ator | Ação / Evento no Sistema | Componente Lógico Resultante | Responsabilidade Única |
 | :--- | :--- | :--- | :--- |
 | **Assinante / Ocasional** | Autenticar utilizador, validar passe/cartão Navegante e QR Code | `identity_access` | Gestão de identidade, autenticação e validação de elegibilidade de passes/cartões. |
 | **Assinante / Ocasional** | Solicitar desbloqueio, monitorizar viagem e registar devolução | `trip_management` | Orquestração e controlo da máquina de estados e ciclo de vida da viagem. |
@@ -23,15 +23,17 @@ A abordagem escolhida foi Actor/Action para realizar a primeira identificação 
 
 ## 3. Mapeamento User Story → Componente
 
-| Referência | User Story / Requisito do Enunciado | Componente Principal | Componentes Secundários Envolvidos |
-| :--- | :--- | :--- | :--- |
-| **US-1** *(Obrigatória)* | Como **assinante**, desbloqueio e devolvo uma bicicleta e a viagem fica registada e cobrada. | `trip_management` | `identity_access`, `dock_gateway`, `tariff_pricing`, `payment_invoicing` |
-| **US-2** | Como **técnico**, recebo uma ordem de manutenção quando uma bicicleta reporta avaria. | `maintenance_orders` | `fleet_health`, `dock_gateway` |
-| **US-3** | Como **doca sem rede**, reenvio os eventos guardados quando a rede volta, sem duplicar viagens. | `dock_gateway` | `trip_management` |
-| **US-4** | Como **gestor municipal**, obtenho o relatório de utilização por freguesia. | `municipal_reporting` | `trip_management`, `station_inventory` |
-| *(Req. 4)* | Como **utilizador**, consulto o mapa em tempo real com bicicletas e docas livres. | `station_inventory` | `dock_gateway` |
-| *(Req. 6)* | Como **equipa de carrinha**, recebo sugestões de rotas para equilibrar a ocupação das estações. | `redistribution_planning` | `station_inventory` |
-| *(Req. 8)* | Como **utilizador**, consulto o meu histórico de viagens e as faturas emitidas. | `identity_access` | `trip_management`, `payment_invoicing` |
+| Referência Oficial | Ator & Descrição da Story / Requisito | Componente Principal | Componentes Secundários / Envolvidos | Notas Arquiteturais & Fluxo de Dependências |
+| :--- | :--- | :--- | :--- | :--- |
+| **US-1** *(Obrigatória)* | **Como assinante**, desbloqueio e devolvo uma bicicleta e a viagem fica registada e cobrada. | `trip_management` | `identity_access`, `dock_gateway`, `station_inventory`, `payment_invoicing` | `trip_management` valida o passe em `identity_access`; `dock_gateway` confirma devolução e notifica `station_inventory`; `payment_invoicing` efetua a cobrança e invoca indiretamente `tariff_pricing`. |
+| **US-2** | **Como técnico**, recebo uma ordem de manutenção quando uma bicicleta reporta avaria. | `maintenance_orders` | `fleet_health` | Suporta dois canais: automático (ingestão IoT de 30s via `fleet_health`) e manual (reporte de utilizador que entra na API e cria diretamente a ordem em `maintenance_orders`). |
+| **US-3** | **Como doca sem rede**, reenvio os eventos guardados quando a rede volta, sem duplicar viagens. | `dock_gateway` | `trip_management`, `station_inventory` | `dock_gateway` faz a desduplicação primária; `trip_management` aplica idempotência ao fechar a viagem; `station_inventory` atualiza a ocupação das docas. |
+| **US-4** | **Como gestor municipal**, obtenho o relatório de utilização por freguesia. | `municipal_reporting` | `trip_management`, `station_inventory` | Processamento analítico em modo leitura (*read only*) para emissão de relatórios e cálculo de CO₂. |
+| **Req. 1** | **Assinante / Ocasional:** Registo na plataforma, compra e validação do passe anual Navegante. | `identity_access` | `payment_invoicing` | Validação da elegibilidade do utilizador e emissão/validação do código QR e cartão Navegante. |
+| **Req. 4** | **Utilizador:** Consulta do mapa em tempo real com bicicletas e docas livres por estação. | `station_inventory` | `dock_gateway` | Leitura desacoplada e de alto desempenho para consulta da app e dados abertos da Câmara. |
+| **Req. 6** | **Equipa de Carrinha:** Sugestão de rotas para equilibrar a ocupação das estações. | `redistribution_planning` | `station_inventory` | Algoritmo de otimização de rotas que lê o estado de ocupação do `station_inventory`. |
+| **Req. 8a** | **Utilizador:** Consulta do histórico pessoal de viagens efetuadas. | `trip_management` | - | A camada de API consulta diretamente o `trip_management`, evitando a criação de ciclos com o `identity_access`. |
+| **Req. 8b** | **Utilizador:** Consulta do histórico de faturas e recibos emitidos. | `payment_invoicing` | - | A camada de API consulta diretamente o `payment_invoicing` em isolamento, cumprindo a coesão do módulo. |
 
 ## 4. Análise de Coesão, Acoplamento e Instabilidade
 
