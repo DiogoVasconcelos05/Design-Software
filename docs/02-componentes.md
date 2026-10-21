@@ -43,6 +43,17 @@ A abordagem escolhida foi Actor/Action para realizar a primeira identificação 
 | **`trip_management`** | **Funcional** | **2** | **2** | **0.50** *(Equilibrado)* | **Coesão:** Trata exclusivamente do ciclo de vida da viagem (início, andamento, fim).<br>**Acoplamento:** Fornece dados ao `billing_payment` e ao `reporting_analytics` ($C_A = 2$). Para autorizar/fechar viagens, necessita de consultar a elegibilidade do utilizador no `user_account` e a confirmação do encaixe físico no `station_dock` ($C_E = 2$).<br>**Papel:** Nó intermédio de orquestração do fluxo de utilização. |
 | **`billing_payment`** | **Funcional** | **1** | **1** | **0.50** *(Equilibrado)* | **Coesão:** Responsável unicamente pela tarifação, cobrança financeira e integração com a Autoridade Tributária.<br>**Acoplamento:** É invocado pelo `trip_management` para liquidação no fim da viagem ($C_A = 1$) e consulta dados de faturação no `user_account` ($C_E = 1$).<br>**Papel:** Módulo isolado de liquidação, permitindo alterar gateways de pagamento sem afetar a lógica de desbloqueio de bicicletas. |
 
+| Componente | Nível de Coesão | $C_A$ | $C_E$ | Instabilidade ($I$) | Justificação Arquitetural |
+| :--- | :--- | :---: | :---: | :---: | :--- |
+| `payment_invoicing` | Sequencial | 2 | 2 | 0,50 | Cobrar, emitir a fatura, guardá-la e comunicá-la à AT são passos em que a saída de um alimenta o seguinte. Depende de `tariff_pricing` e `common`; é usado por `trip_management` e `api`. Está no limite: se crescer (por exemplo, mais fornecedores de pagamento), separar a parte fiscal. |
+| `tariff_pricing` | Funcional | 2 | 1 | 0,33 | Um único propósito: calcular o preço de uma viagem a partir de um tarifário. Função pura, sem estado, só depende de `common`. Estável, o que permite acrescentar tarifários das câmaras vizinhas sem tocar noutros componentes. |
+| `fleet_health` | Comunicacional | 2 | 2 | 0,50 | Receber a telemetria e detetar avarias operam sobre os mesmos dados (as leituras da frota). Depende de `maintenance_orders` para abrir ordens; é usado por `dock_gateway` e `api`. |
+| `maintenance_orders` | Funcional | 2 | 1 | 0,33 | Só abre e acompanha ordens de manutenção. Não conhece a origem da avaria (automática ou reportada por um utilizador), o que o mantém estável e fácil de testar. |
+| `redistribution_planning` | Funcional | 1 | 2 | 0,67 | Só sugere rotas, a partir da ocupação lida em `station_inventory`. Nada depende dele a não ser a `api`, por isso pode mudar de algoritmo à vontade. Instabilidade alta é aceitável aqui. |
+| `municipal_reporting` | Comunicacional | 1 | 3 | 0,75 | Agrega a utilização por freguesia e o CO₂ evitado, ambos sobre os dados das viagens. Só lê, e depende de `trip_management`, `station_inventory` e `common`. É o mais instável deste grupo, o que é aceitável: ninguém depende dele, e o relatório muda com as exigências da Câmara. |
+| `common` | Lógica (baixa) | 11 | 0 | 0,00 | Reúne tipos e eventos partilhados sem relação funcional entre si, por isso a coesão é baixa por natureza. Compensa-se com a estabilidade total ($C_E = 0$). Todos os componentes o usam, logo cada alteração tem custo alto: mantê-lo pequeno, sem lógica de negócio. |
+| `api` | Lógica | 0 | 11 | 1,00 | Ponto de entrada que agrupa os pedidos externos e compõe os componentes; não tem lógica de negócio. Instabilidade máxima é esperada e correta: depende de todos, ninguém depende dele (regra de dependências 1). |
+
 ## 5. Acoplamento Temporal
 
 O fluxo transacional da **US-1 (Desbloqueio e Cobrança de Viagem)** exige o cumprimento de duas regras estritas de **acoplamento temporal** (ordem sequencial de execução necessária):
@@ -53,6 +64,12 @@ O fluxo transacional da **US-1 (Desbloqueio e Cobrança de Viagem)** exige o cum
    A devolução da bicicleta (confirmada pelo `station_dock`) obriga a que o `trip_management` determine a duração exata da viagem **antes** de disparar o cálculo e cobrança de blocos de 15 minutos em `billing_payment`. A cobrança e a emissão de fatura constituem a unidade final da transação de devolução.
 
 ## 6. Conascencia
+
+| # | Componentes | Tipo de conascência | Força | Localidade | Grau | Descrição | Ação para reduzir |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | `dock_gateway` <-> `trip_management` | Dinâmica: execução e identidade | Alta  | Entre componentes (distante) | 2 componentes, mas afeta todas as viagens | A viagem só pode fechar depois de a doca confirmar o encaixe, e o mesmo evento reenviado (US-3) tem de corresponder sempre à mesma viagem, para não a duplicar. | Identificador único por evento, gerado na doca. Desduplicação em `dock_gateway` e operação de fecho idempotente em `trip_management` (segunda linha de defesa). Registar em ADR. |
+| 2 | `trip_management` <-> `payment_invoicing` | Estática: tipo e significado | Média | Entre componentes (distante) | 2 componentes | Ambos têm de concordar sobre os dados de uma viagem terminada (duração, tipo de utilizador, ID) e sobre o significado de cada campo (por exemplo, se a duração está em segundos ou em minutos). | Contrato explícito e tipado em `common` (uma classe imutável `TripSummary`)(`duration_minutes`). |
+| 3 | `payment_invoicing` <-> `tariff_pricing` | Estática: posição e significado | Média | Entre componentes (distante) | 2 componentes | Se o cálculo do preço receber parâmetros soltos (`calc(52, "annual")`), os dois lados dependem da ordem dos argumentos e do significado do texto `"annual"`. | Passar um objeto tipado (`PricingRequest`) com enumeração para o tipo de passe. A conascência desce para nome e tipo, que são as formas mais fracas. |
 
 ## 7. Iteração de Reestruturação
 
