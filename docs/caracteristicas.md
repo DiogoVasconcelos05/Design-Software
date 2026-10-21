@@ -4,7 +4,8 @@
 
 ### Implícitas
 - Availability
-    - "Cerca de 70% dos desbloqueios acontecem entre as 8h00–9h30 e as 17h30–19h00. Em
+    - "O contrato de concessão aplica uma multa por cada hora em que mais de 10% das
+estações não conseguem desbloquear bicicletas." e "Cerca de 70% dos desbloqueios acontecem entre as 8h00–9h30 e as 17h30–19h00. Em
 eventos (Santos Populares, maratona) a procura em algumas estações multiplica por 4."
 - Security
     - "As faturas são comunicadas à Autoridade Tributária e guardadas durante 10 anos. O
@@ -27,9 +28,7 @@ eventos (Santos Populares, maratona) a procura em algumas estações multiplica 
     - "Cerca de 70% dos desbloqueios acontecem entre as 8h00–9h30 e as 17h30–19h00. Em
 eventos (Santos Populares, maratona) a procura em algumas estações multiplica por 4".
 - Supportability
-    - "O contrato de concessão aplica uma multa por cada hora em que mais de 10% das
-estações não conseguem desbloquear bicicletas.
-"
+    - "Abrir uma ordem de manutenção quando uma bicicleta reporta avaria (bateria, travões) ou um utilizador a reporta."
 
 ## Top 3
 - Availability
