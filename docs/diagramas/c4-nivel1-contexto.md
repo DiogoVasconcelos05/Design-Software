@@ -2,31 +2,43 @@
 %%{init: {
   'theme': 'base',
   'themeVariables': {
+    'edgeLabelBackground': '#2b2b2b',
     'primaryTextColor': '#ffffff',
     'secondaryTextColor': '#ffffff',
     'tertiaryTextColor': '#ffffff',
-    'lineColor': '#ffffff',
+    'lineColor': '#cccccc',
     'textColor': '#ffffff'
   }
 }}%%
-C4Context
-    title Diagrama de Contexto (C4 Nível 1) - Lisboa Pedala
+graph TD
+    classDef person fill:#08427b,stroke:#073b6f,color:#fff;
+    classDef system fill:#1168bd,stroke:#0e5296,color:#fff;
+    classDef external fill:#666666,stroke:#444444,color:#fff;
 
-    Person(assinante, "Assinante / Utilizador", "Utilizador da rede que realiza\nviagens e consulta faturas.")
-    Person(tecnico, "Técnico de Manutenção", "Técnico encarregue de reparar\nbicicletas danificadas.")
-    Person(gestor, "Gestor Municipal", "Representante da Câmara que\nanalisa métricas e CO2.")
+    subgraph Topo[" "]
+        style Topo fill:none,stroke:none
+        assinante["<b>Assinante / Utilizador</b><br/>[Person]<br/>Utilizador da rede que realiza viagens"]:::person
+        tecnico["<b>Técnico de Manutenção</b><br/>[Person]<br/>Técnico encarregue de reparar"]:::person
+        gestor["<b>Gestor Municipal</b><br/>[Person]<br/>Representante da Câmara"]:::person
+    end
 
-    System(lisboa_pedala, "Sistema Lisboa Pedala", "Plataforma central de gestão,\ndesbloqueio, tarifação e frota.")
+    subgraph Meio[" "]
+        style Meio fill:none,stroke:none
+        lisboa_pedala["<b>Sistema Lisboa Pedala</b><br/>[Software System]<br/>Plataforma central de gestão"]:::system
+    end
 
-    System_Ext(docas, "Estações & Docas", "Infraestrutura física que deteta\no encaixe e liberta bicicletas.")
-    System_Ext(at, "Autoridade Tributária", "Sistema de faturação e\ncomunicação fiscal do estado.")
-    System_Ext(psp, "Gateway Pagamentos", "Gateways de pagamento\n(MB WAY, Cartão).")
+    subgraph Base[" "]
+        style Base fill:none,stroke:none
+        docas["<b>Estações & Docas</b><br/>[Software System]<br/>Infraestrutura física"]:::external
+        at["<b>Autoridade Tributária</b><br/>[Software System]<br/>Sistema de faturação"]:::external
+        psp["<b>Gateway Pagamentos</b><br/>[Software System]<br/>Gateways de pagamento"]:::external
+    end
 
-    Rel(assinante, lisboa_pedala, "Desbloqueia e paga", "App / CLI")
-    Rel(tecnico, lisboa_pedala, "Recebe ordens", "REST")
-    Rel(gestor, lisboa_pedala, "Consulta relatórios", "REST")
+    assinante -->|Desbloqueia e paga<br/>App / CLI| lisboa_pedala
+    tecnico -->|Recebe ordens<br/>REST| lisboa_pedala
+    gestor -->|Consulta relatórios<br/>REST| lisboa_pedala
 
-    Rel(docas, lisboa_pedala, "Envia eventos", "IoT / Rede Móvel")
-    Rel(lisboa_pedala, at, "Comunica faturas", "REST")
-    Rel(lisboa_pedala, psp, "Processa cobranças", "REST")
+    lisboa_pedala -->|Lê eventos<br/>IoT / Rede Móvel| docas
+    lisboa_pedala -->|Comunica faturas<br/>REST| at
+    lisboa_pedala -->|Processa cobranças<br/>REST| psp
 ```
