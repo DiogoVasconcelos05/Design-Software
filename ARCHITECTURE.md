@@ -53,8 +53,19 @@
 ---
 
 ## 6. Mapeamento de ADRs por Componente
-* **`trip_management` & `dock_gateway`:** ADR-002 e ADR-003 (Reestruturação).
-* **Todos os Componentes:** ADR-001 (Monólito Modular por Domínio).
+
+* **Todos os Componentes (`common`, `api` e todos os do domínio):**
+  * **ADR-001:** Adoção de Particionamento de Topo por Domínio em Monólito Modular (Java 21).
+
+* **`tariff_pricing` & `payment_invoicing`:**
+  * **ADR-002:** *[Substituído]* Módulo Unificado de Gestão Financeira e Tarifários (`billing_payment`).
+  * **ADR-003:** Separação de Módulos entre Cálculo Tarifário (`tariff_pricing`) e Processamento Fiscal/Financeiro (`payment_invoicing`).
+
+* **`trip_management` & `dock_gateway`:**
+  * **ADR-004:** Idempotência do Fecho de Viagem e Resiliência por Identificador Unico de Evento da Doca (`eventId` UUID).
+
+* **`municipal_reporting`, `redistribution_planning` & `station_inventory`:**
+  * **ADR-005:** Leitura de Dados entre Módulos através de Interfaces de Consulta Só de Leitura (`..query..`) e Isolamento do Esquema de Persistência.
 
 ## 7 Concretizações
 
