@@ -3,7 +3,8 @@
 ## 0. Como usar este documento (instruções para a IA)
 
 1. Lê o documento inteiro antes de escrever código. Implementa **um módulo de cada vez**, e só avanças quando `mvn verify` passar.
-2. **Não cries** pacotes, módulos, tabelas ou endpoints que não estejam descritos aqui.
+2. **Não cries** pacotes, módulos, tabelas, endpoints, etc que não estejam descritos aqui.
+3. Este sistema é apenas para fins demonstrativos, portanto coisas como "integração de cartão navegante" são por "mock".
 
 
 ## 1. Módulos e Responsabilidades
@@ -118,7 +119,7 @@
     └── test/java/pt/lisboapedala
         ├── architecture/ArchitectureRulesTest.java
         ├── <modulo>/...               # testes unitários por módulo
-        └── integration/{Us1...,Us2...,Us3...,Us4...}Test.java
+        └── integration/{Us1...,Us2...,Us4...}Test.java
 ```
 
 ### 7.3 API HTTP
