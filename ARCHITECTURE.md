@@ -49,9 +49,19 @@
 * **Proibido:** Não fazer *queries* SQL com *JOINs* entre tabelas de domínios diferentes.
 * **Proibido:** Não criar dependências circulares entre componentes.
 * **Obrigatório:** Todos os DTOs partilhados em `common` devem ser registos imutáveis (`record` em Java 21).
-
+* **Obrigatório:** Boa práticas OOP (interfacing, extensão quando possível, mínimo de acoplamento entre módulos, separação de responsabilidades dos módulos, etc)
 ---
 
 ## 6. Mapeamento de ADRs por Componente
 * **`trip_management` & `dock_gateway`:** ADR-002 e ADR-003 (Reestruturação).
 * **Todos os Componentes:** ADR-001 (Monólito Modular por Domínio).
+
+## 7 Concretizações
+
+### 7.1 Schema base dados
+
+### 7.2 Estrutura do código 
+
+### 7.3 API HTTP
+
+### 7.4 
