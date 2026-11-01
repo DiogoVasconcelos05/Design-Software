@@ -5,6 +5,7 @@
 1. Lê o documento inteiro antes de escrever código. Implementa **um módulo de cada vez**, e só avanças quando `mvn verify` passar.
 2. **Não cries** pacotes, módulos, tabelas, endpoints, etc que não estejam descritos aqui.
 3. Este sistema é apenas para fins demonstrativos, portanto coisas como "integração de cartão navegante" são por "mock".
+4. Nenhum ficheiro de código entra no repository se não passar às fitness functions.
 
 
 ## 1. Módulos e Responsabilidades
