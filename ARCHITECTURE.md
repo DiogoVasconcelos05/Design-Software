@@ -138,8 +138,6 @@ Base: `/api/v1`. JSON. Datas em ISO-8601 UTC. Os *controllers* vivem em `api.res
 | 5 | `GET /trips/{tripId}` | — | `200` `TripView` | `TripService.getTrip` | US-1 |
 | 6 | `GET /users/{userId}/trips?limit=20&offset=0` | — | `200` `[TripView]` | `TripService.history` | Req. 8a |
 | 7 | `GET /users/{userId}/invoices?limit=20&offset=0` | — | `200` `[InvoiceView]` | `PaymentService.invoicesOf` | Req. 8b |
-| 8 | `POST /dock-events` | `DockEvent` | `200` `IngestResult` | `DockEventIngestion.ingest` | US-3 |
-| 9 | `POST /dock-events/batch` | `{events:[DockEvent]}` | `200` `[IngestResult]` | `DockEventIngestion.ingestBatch` | US-3 |
 | 10 | `POST /telemetry` | `TelemetryReading` | `202` | `TelemetryIngestion.ingest` | US-2 |
 | 11 | `GET /stations` | — | `200` `[StationOccupancy]` | `StationOccupancyQuery.findAll` | Req. 4 |
 | 12 | `GET /stations/{stationId}` | — | `200` `StationOccupancy` / `404` | `StationOccupancyQuery.findByStation` | Req. 4 |
@@ -185,7 +183,7 @@ sequenceDiagram
 ```
 Expiração: um *job* em `trip_management.internal` marca `EXPIRED` as viagens `REQUESTED` há mais de `lisboapedala.trip.unlock-timeout-seconds`.
 
-#### 7.4.2 Devolução, fecho e cobrança (US-1, parte 2 e US-3)
+#### 7.4.2 Devolução, fecho e cobrança (US-1, parte 2)
 ```mermaid
 sequenceDiagram
     participant D as Doca
@@ -213,10 +211,8 @@ sequenceDiagram
 ```
 **Outbox de cobrança:** um *job* em `trip_management.internal` (cada `lisboapedala.trip.billing-retry-interval-seconds`) procura viagens `CLOSED` com `billing_dispatched = 0` e volta a chamar `PaymentService.charge` (seguro: idempotente por `tripId`). Idem em `payment_invoicing` para cobranças `FAILED` (limite `lisboapedala.payment.max-attempts`) e faturas com `at_status = PENDING`.
 
-**Reenvio (US-3):** a doca reenvia via `POST /dock-events/batch`. Cada evento duplicado devolve `DUPLICATE` e não produz nenhum efeito; um evento reenviado horas depois produz o **mesmo** valor cobrado, porque a duração usa `occurredAt`.
-
 #### 7.4.3 Avaria automática e manual (US-2)
-`POST /telemetry` → `TelemetryIngestion` → `fleet_health.TelemetryService.ingest` → (anomalia nova) → `MaintenanceService.open(AUTOMATIC)`. O reporte manual entra por `POST /maintenance-orders` (`USER_REPORT`). Se já existir ordem ativa para `(bikeId, faultType)`, **não** se cria outra.
+`POST /telemetry` -> `TelemetryIngestion` → `fleet_health.TelemetryService.ingest` -> (anomalia nova) -> `MaintenanceService.open(AUTOMATIC)`. O reporte manual entra por `POST /maintenance-orders` (`USER_REPORT`). Se já existir ordem ativa para `(bikeId, faultType)`, **não** se cria outra.
 
 #### 7.4.4 Relatório municipal (US-4)
-`GET /reports/monthly` → `MonthlyReportService.generate` → `TripUsageQuery` (paginado) + `StationLocationQuery` → agregação em memória por freguesia.
+`GET /reports/monthly` -> `MonthlyReportService.generate` → `TripUsageQuery` (paginado) + `StationLocationQuery` -> agregação em memória por freguesia.
