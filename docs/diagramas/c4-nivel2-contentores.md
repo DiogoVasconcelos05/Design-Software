@@ -2,6 +2,7 @@
 %%{init: {
   'theme': 'base',
   'themeVariables': {
+    'edgeLabelBackground': '#2b2b2b',
     'primaryTextColor': '#ffffff',
     'secondaryTextColor': '#ffffff',
     'tertiaryTextColor': '#ffffff',
@@ -9,53 +10,45 @@
     'textColor': '#ffffff'
   }
 }}%%
-C4Container
-    title Diagrama de Contentores (C4 Nível 2) - Lisboa Pedala
+graph TD
+    classDef person fill:#08427b,stroke:#073b6f,color:#fff;
+    classDef external fill:#666666,stroke:#444444,color:#fff;
+    classDef container fill:#1168bd,stroke:#0e5296,color:#fff;
+    classDef db fill:#1168bd,stroke:#0e5296,color:#fff;
 
-    Person(user, "Utilizador / Assinante", "Pessoa que utiliza as bicicletas.")
-    Person(tech, "Técnico / Equipa", "Manutenção e redistribuição da frota.")
+    %% TOP LEVEL: ATORES E DISPOSITIVOS
+    subgraph Topo[" "]
+        style Topo fill:none,stroke:none
+        user["<b>Utilizador / Assinante</b><br/>[Person]<br/>Pessoa que utiliza as bicicletas."]:::person
+        tech["<b>Técnico / Equipa</b><br/>[Person]<br/>Manutenção e redistribuição."]:::person
+        doca_hw["<b>Firmware da Doca</b><br/>[Software System]<br/>Eventos das estações."]:::external
+    end
 
-    System_Ext(doca_hw, "Firmware da Doca", "Guarda eventos offline até 24h.")
-    System_Ext(at_ext, "Autoridade Tributária", "Comunicação de faturas.")
-    System_Ext(psp_ext, "Gateway Pagamentos", "MB WAY / Cartão de Crédito.")
+    %% MIDDLE LEVEL: PLATAFORMA LISBOA PEDALA
+    subgraph Plataforma["Plataforma Lisboa Pedala [Container]"]
+        style Plataforma fill:none,stroke:#666666,stroke-dasharray: 5 5,color:#ffffff
+        cli_app["<b>App / Interface CLI</b><br/>[Container: Java / CLI]<br/>Ponto de entrada dos utilizadores."]:::container
+        monolith["<b>Backend Monólito Modular</b><br/>[Container: Java 21 / Spring]<br/>Lógica de negócio, gestão de viagens,<br/>tarifação e manutenção."]:::container
+        db[("<b>Base de Dados</b><br/>[Container: SQLite / In-Memory]<br/>Guarda utilizadores, viagens,<br/>inventário e faturas.")]:::db
+    end
 
-    Container_Boundary(c1, "Plataforma Lisboa Pedala") {
-        Container(cli_app, "App / Interface CLI", "Java / CLI", "Ponto de entrada dos pedidos.")
-        ContainerDb(db, "Base de Dados", "SQLite / In-Memory", "Persistência de viagens e dados.")
+    %% BOTTOM LEVEL: SISTEMAS EXTERNOS
+    subgraph Base[" "]
+        style Base fill:none,stroke:none
+        psp_ext["<b>Gateway Pagamentos</b><br/>[Software System]<br/>MB WAY / Cartão."]:::external
+        at_ext["<b>Autoridade Tributária</b><br/>[Software System]<br/>Comunicação fiscal."]:::external
+    end
 
-        Container_Boundary(monolith, "Backend Monólito Modular (Java 21)") {
-            Container(identity, "identity_access", "Módulo", "Validação de passes e utilizadores.")
-            Container(trip, "trip_management", "Módulo", "Ciclo de vida das viagens.")
-            Container(gateway, "dock_gateway", "Módulo", "Desduplicação de eventos.")
-            Container(inventory, "station_inventory", "Módulo", "Ocupação em tempo real.")
-            Container(pricing, "tariff_pricing", "Módulo", "Cálculo de tarifas.")
-            Container(invoicing, "payment_invoicing", "Módulo", "Cobranças e faturas.")
-            Container(fleet, "fleet_health", "Módulo", "Telemetria IoT e avarias.")
-            Container(maint, "maintenance_orders", "Módulo", "Ordens de trabalho.")
-            Container(redist, "redistribution_planning", "Módulo", "Sugestão de rotas.")
-            Container(report, "municipal_reporting", "Módulo", "Relatórios municipais.")
-        }
-    }
+    %% LIGAÇÕES SUPERIORES
+    user -->|Utiliza<br/>CLI / REST| cli_app
+    tech -->|Utiliza<br/>CLI / REST| cli_app
+    doca_hw -->|Envia eventos de encaixe<br/>HTTPS / IoT| monolith
 
-    Rel(user, cli_app, "Utiliza", "CLI / REST")
-    Rel(tech, cli_app, "Utiliza", "CLI / REST")
-    Rel(doca_hw, gateway, "Envia eventos", "HTTPS")
+    %% LIGAÇÕES INTERNAS
+    cli_app -->|Invoca operações<br/>Java Call / REST| monolith
+    monolith -->|Lê e escreve dados<br/>JDBC / SQL| db
 
-    Rel(cli_app, trip, "Invoca")
-    Rel(cli_app, inventory, "Invoca")
-    
-    Rel(gateway, trip, "Inicia/Fecha viagem")
-    Rel(gateway, inventory, "Atualiza ocupação")
-    Rel(gateway, fleet, "Alertas IoT")
-
-    Rel(trip, identity, "Valida passe")
-    Rel(trip, invoicing, "Pede cobrança")
-    Rel(invoicing, pricing, "Calcula tarifa")
-    Rel(fleet, maint, "Cria ordem")
-
-    Rel(trip, db, "Lê/Escreve")
-    Rel(inventory, db, "Lê/Escreve")
-
-    Rel(invoicing, psp_ext, "Efetua cobrança", "HTTPS")
-    Rel(invoicing, at_ext, "Submete fatura", "HTTPS")
+    %% LIGAÇÕES INFERIORES
+    monolith -->|Processa cobranças<br/>HTTPS| psp_ext
+    monolith -->|Submete faturas<br/>HTTPS| at_ext
 ```
