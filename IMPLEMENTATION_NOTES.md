@@ -67,3 +67,13 @@ Suposições feitas pela IA (uma linha cada), por módulo.
 * PSP e AT são simulados (`SimulatedPaymentGateway`, `SimulatedTaxAuthority`): aceitam tudo, só ficam no log e não usam cliente HTTP; atrás das interfaces `PaymentGateway` e `TaxAuthorityGateway` para poderem ser trocados por clientes reais (só payment_invoicing pode tê-los, FF-14a).
 * O meio de pagamento é um por utilizador (registar outro substitui o anterior); o `token` é a referência opaca do PSP, nunca o número do cartão, e não vai para o log.
 * `invoicesOf` aceita `limit` entre 1 e 100 e `offset >= 0`; fora disso dá `VALIDATION`. Ordena da mais recente para a mais antiga.
+
+## tariff_pricing
+
+* As regras concretas do Requisito 3 não estão em `ARCHITECTURE.md`, `docs/adr` nem `docs/diagramas`; só se sabe que há assinantes (`ANNUAL`) e ocasionais (`OCCASIONAL`) e que se cobra por blocos de 15 min (ADR-004 §5). Os valores de Lisboa são por isso **provisórios** e estão num único sítio (`TariffSchedule.lisboa()`): assinante com 45 min incluídos e 0,50 € por cada bloco de 15 min começado a seguir; ocasional com 1,00 € por cada bloco de 15 min começado.
+* Os valores ficam no código e não em `application.properties`: a FF-10a só permite a `tariff_pricing` depender de `common`, do JDK puro e de `org.springframework.stereotype`, por isso não pode usar `@Value`/`@ConfigurationProperties`.
+* Implementação de `TariffPricing` em `tariff_pricing.internal` (`DefaultTariffPricing`), com `TariffSchedule` (um tarifário por município, uma `TariffRule` por tipo de passe) e `BlockTariff` (minutos incluídos + preço por bloco começado); tudo `record`/campos `final`, sem relógio, I/O nem estado (FF-10).
+* Um tarifário tem de cobrir todos os `PassType`; um tipo novo sem regra falha ao construir o tarifário, e não na cobrança.
+* Um município vizinho é outra instância de `TariffSchedule` (ADR-003); `PricingRequest` não leva o município porque nenhum fluxo do §7.4 o fornece. Escolher o tarifário por município fica para quando houver essa informação na viagem.
+* A duração chega já arredondada para cima ao minuto (`trip_management`); 0 minutos dá 0 € (nenhum bloco começado), que `payment_invoicing` trata como `PAID` sem PSP nem fatura.
+* O valor devolvido tem no máximo 2 casas decimais, mas o arredondamento ao cêntimo continua a ser de `payment_invoicing` (`HALF_UP`).
