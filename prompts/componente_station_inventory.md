@@ -33,4 +33,4 @@ Gera o código Java completo para o módulo `station_inventory`.
 
 # Resultado
 * **Estado**: Aceite
-* **Porquê**: TODO
+* **Porquê**: O código gerado para o módulo `station_inventory` cumpriu estritamente a especificação do `ARCHITECTURE.md` e a ADR-005. Todas as fitness functions aplicáveis passaram com sucesso: a árvore de pacotes foi mantida estritamente dentro de `query/`, `port/`, `internal/` e `persistence/` (FF-11), a consulta do estado de ocupação foi exposta através de `record`s imutáveis na interface pública `StationOccupancyQuery` (FF-05/06) sem violação de dados do RGPD (FF-18), e o acesso à base de dados utilizou `JdbcClient` privado ao módulo com injeção de tempo via `java.time.Clock` (FF-12/16).

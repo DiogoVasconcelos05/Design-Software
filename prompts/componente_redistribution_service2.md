@@ -36,4 +36,4 @@ Gera o código Java completo para o módulo `redistribution_planning`.
 
 # Resultado
 * **Estado**: Aceite
-* **Porquê**: TODO
+* **Porquê**: A regeneração corrigiu a violação detetada anteriormente na FF-06 ao remover o `enum` do pacote público `..query..`, passando a expor apenas `record`s e `interface`s de nível superior. O módulo passou em todas as fitness functions de arquitetura: operou exclusivamente em memória sem acesso direto à base de dados ou anotações `@Transactional` (FF-08), consumiu o estado de ocupação através da interface pública `StationOccupancyQuery` (FF-07) utilizando corretamente o método `station.totalDocks()`, e injetou `java.time.Clock` para controlos temporais (FF-16).

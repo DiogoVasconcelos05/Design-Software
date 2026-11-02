@@ -19,4 +19,4 @@ Gera o código Java completo para o pacote `common`, organizado com a estrutura 
 
 # Resultado
 * **Estado**: Aceite
-* **Porquê**: TODO
+* **Porquê**: O pacote `common` foi gerado em conformidade total com o `ARCHITECTURE.md` e o ADR-001/004. Passou nas fitness functions FF-02, FF-08 e FF-09 ao manter-se 100% isento de dependências de qualquer outro módulo da aplicação ou de anotações do ecossistema Spring. Todos os DTOs e eventos partilhados (incluindo o `DockEventRecord`) foram definidos como `record`s imutáveis de Java 21, e o pacote ficou restrito a tipos fundamentais, exceções genéricas e enums de erro da aplicação.

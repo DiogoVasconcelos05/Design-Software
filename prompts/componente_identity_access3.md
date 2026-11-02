@@ -33,4 +33,4 @@ Gera o código Java completo para o módulo `identity_access`.
 
 # Resultado
 * **Estado**: Aceite
-* **Porquê**: TODO
+* **Porquê**: O módulo cumpriu na íntegra a especificação do `ARCHITECTURE.md` e as restrições arquiteturais. Todas as fitness functions do ArchUnit passaram com sucesso: a estrutura de pastas ficou restrita aos pacotes permitidos `query/`, `port/`, `internal/` e `persistence/` (FF-11).

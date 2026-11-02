@@ -33,4 +33,4 @@ Gera o código Java completo para o módulo `municipal_reporting`.
 
 # Resultado
 * **Estado**: Aceite
-* **Porquê**: TODO
+* **Porquê**: O módulo implementou com sucesso o padrão de leitura desacoplada e isolamento definido no ADR-005 e `ARCHITECTURE.md`. Todas as fitness functions aplicáveis passaram: a estrutura ficou contida no pacote `internal/` (FF-11), o módulo manteve-se estritamente sem persistência, JDBC ou transações `@Transactional` (FF-08), e consumiu os dados de viagens e estações exclusivamente através das interfaces públicas `TripUsageQuery` e `StationLocationQuery` localizadas nos pacotes `..query..` (FF-07). A agregação mensal de CO₂ por freguesia foi realizada totalmente em memória sem violar regras de privacidade (FF-18).
