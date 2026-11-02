@@ -11,5 +11,5 @@ Your goal is to generate the component tariff_pricing using the specification fo
 Make a PR when you're done.
 
 # Resultado
-* **Estado**: Por rever
+* **Estado**: Aceite
 * **Porquê**: Todas as fitness functions aplicáveis passam (incluindo FF-10a/FF-10b, pureza e ausência de estado em `tariff_pricing`), tal como os 11 testes novos do módulo. Continuam a falhar as 2 verificações que dependem de outros módulos (`todosOsModulosTemPeloMenosUmaClasse`, `umUnicoTratadorDeErros`), que já falhavam antes. Os valores do tarifário são provisórios, porque o Requisito 3 só está em `docs/0*`; ver `IMPLEMENTATION_NOTES.md`.
