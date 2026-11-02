@@ -9,6 +9,7 @@ import pt.lisboapedala.common.valueobject.PassValidation;
 import pt.lisboapedala.common.valueobject.PassValidationStatus;
 import pt.lisboapedala.identity_access.persistence.UserEntity;
 import pt.lisboapedala.identity_access.persistence.UserJdbcRepository;
+import pt.lisboapedala.identity_access.port.CredentialValidator;
 import pt.lisboapedala.identity_access.port.IdentityService;
 import pt.lisboapedala.identity_access.port.RegisterUserCommand;
 import pt.lisboapedala.identity_access.port.UserProfileView;
@@ -16,15 +17,17 @@ import pt.lisboapedala.identity_access.query.IdentityQuery;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Serviço principal do módulo identity_access.
+ * Serviço principal do módulo identity_access que implementa o registo, a consulta
+ * e a validação de credenciais via CredentialValidator.
  * Respeita a injeção obrigatória do Clock (FF-16) e logging via SLF4J (FF-19).
  */
 @Service
-public class DefaultIdentityService implements IdentityService, IdentityQuery {
+public class DefaultIdentityService implements IdentityService, CredentialValidator, IdentityQuery {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultIdentityService.class);
 
@@ -69,6 +72,7 @@ public class DefaultIdentityService implements IdentityService, IdentityQuery {
 
     @Override
     public PassValidation validateCredential(Credential credential) {
+        Objects.requireNonNull(credential, "credential não pode ser nulo");
         log.info("A validar credencial do tipo: {}", credential.kind());
 
         return switch (credential.kind()) {

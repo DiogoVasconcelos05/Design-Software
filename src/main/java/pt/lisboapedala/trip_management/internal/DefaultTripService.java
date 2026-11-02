@@ -18,7 +18,7 @@ import pt.lisboapedala.common.exception.EntityNotFoundException;
 import pt.lisboapedala.common.exception.ErrorCode;
 import pt.lisboapedala.common.valueobject.Credential;
 import pt.lisboapedala.common.valueobject.PassValidation;
-import pt.lisboapedala.identity_access.port.IdentityService;
+import pt.lisboapedala.identity_access.port.CredentialValidator;
 import pt.lisboapedala.trip_management.persistence.TripEntity;
 import pt.lisboapedala.trip_management.persistence.TripRepository;
 import pt.lisboapedala.trip_management.port.DockCommandPort;
@@ -36,15 +36,15 @@ public class DefaultTripService implements TripService {
     private static final Logger log = LoggerFactory.getLogger(DefaultTripService.class);
 
     private final TripRepository trips;
-    private final IdentityService identityService;
+    private final CredentialValidator credentialValidator;
     private final DockCommandPort dockCommands;
     private final ApplicationEventPublisher events;
     private final Clock clock;
 
-    public DefaultTripService(TripRepository trips, IdentityService identityService,
+    public DefaultTripService(TripRepository trips, CredentialValidator credentialValidator,
                               DockCommandPort dockCommands, ApplicationEventPublisher events, Clock clock) {
         this.trips = trips;
-        this.identityService = identityService;
+        this.credentialValidator = credentialValidator;
         this.dockCommands = dockCommands;
         this.events = events;
         this.clock = clock;
@@ -60,7 +60,7 @@ public class DefaultTripService implements TripService {
         Objects.requireNonNull(credential, "credential não pode ser nulo");
         requireText(dockId, "dockId");
 
-        PassValidation validation = identityService.validateCredential(credential);
+        PassValidation validation = credentialValidator.validateCredential(credential);
         if (!validation.isValid()) {
             throw new BusinessRuleException(ErrorCode.PASS_INVALID,
                     "Passe inválido (" + validation.status() + "): nada foi enviado à doca.");
