@@ -1,7 +1,7 @@
 # Registo de Utilização de IA - Gerar Componente tariff_pricing
 
 * **Ferramenta / Modelo:** Claude Code (Claude Opus 5.5)
-* **Ficheiros de contexto fornecidos:** `ARCHITECTURE.md`, `docs/adr/`, `docs/diagramas/`, as fitness functions em `tests/java`, o componente `common` e a porta `tariff_pricing.port` criada com `payment_invoicing` (sem `docs/0*`)
+* **Ficheiros de contexto fornecidos:** `ARCHITECTURE.md`, `docs/adr/`, `docs/diagramas/`, as fitness functions em `tests/java` (para teste), o componente `common` e a porta `tariff_pricing.port` criada com `payment_invoicing` (sem `docs/0*`)
 
 ## Prompt utilizada
 Scan the following repository: https://github.com/DiogoVasconcelos05/Design-Software

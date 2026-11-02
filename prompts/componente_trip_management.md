@@ -1,7 +1,7 @@
 # Registo de Utilização de IA - Gerar Componente trip_management
 
 * **Ferramenta / Modelo:** Claude Code (Claude Opus 5.5)
-* **Ficheiros de contexto fornecidos:** `ARCHITECTURE.md`, `docs/adr/`, `docs/diagramas/`, enunciado do trabalho (PDF), as fitness functions em `tests/java` e o componente `common`
+* **Ficheiros de contexto fornecidos:** `ARCHITECTURE.md`, `docs/adr/`, `docs/diagramas/`, enunciado do trabalho (PDF), as fitness functions em `tests/java` (para teste) e o componente `common`
 
 ## Prompt utilizada
 Scan the following repository: https://github.com/DiogoVasconcelos05/Design-Software

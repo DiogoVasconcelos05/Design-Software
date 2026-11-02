@@ -1,7 +1,7 @@
 # Registo de Utilização de IA - Gerar Componente maintenance_orders
 
 * **Ferramenta / Modelo:** Claude Code (Claude Opus 5.5)
-* **Ficheiros de contexto fornecidos:** `ARCHITECTURE.md`, `docs/adr/`, `docs/diagramas/`, as fitness functions em `tests/java`, o componente `common` e os componentes já implementados (`trip_management`, `dock_gateway`, `payment_invoicing`, `tariff_pricing`, `fleet_health`)
+* **Ficheiros de contexto fornecidos:** `ARCHITECTURE.md`, `docs/adr/`, `docs/diagramas/`, as fitness functions em `tests/java` (para teste), o componente `common` e os componentes já implementados (`trip_management`, `dock_gateway`, `payment_invoicing`, `tariff_pricing`, `fleet_health`)
 
 ## Prompt utilizada
 Scan the following repository: https://github.com/DiogoVasconcelos05/Design-Software
