@@ -1,7 +1,7 @@
 # Registo de Utilização de IA - Gerar Componente dock_gateway
 
 * **Ferramenta / Modelo:** Claude Code (Claude Opus 5.5)
-* **Ficheiros de contexto fornecidos:** `ARCHITECTURE.md`, `docs/adr/`, `docs/diagramas/`, as fitness functions em `tests/java`, o componente `common` e o componente `trip_management`
+* **Ficheiros de contexto fornecidos:** `ARCHITECTURE.md`, `docs/adr/`, `docs/diagramas/`, as fitness functions em `tests/java` (para teste), o componente `common` e o componente `trip_management`
 
 ## Prompt utilizada
 Scan the following repository: https://github.com/DiogoVasconcelos05/Design-Software
