@@ -26,3 +26,22 @@ Suposições feitas pela IA (uma linha cada), por módulo.
 * `history` e `TripUsageQuery` aceitam `limit` entre 1 e 100 e `offset >= 0`; fora disso dão `VALIDATION`.
 * `TripUsageRecord` usa as docas de origem e destino (o mapeamento doca → estação/freguesia é de `station_inventory`) e o `bikeId`; o tipo de bicicleta e a distância não vêm nos eventos das docas, por isso ficam de fora até haver fonte para eles.
 * Um `BIKE_DOCKED` que chegue antes do `BIKE_RELEASED` da mesma viagem (reenvio fora de ordem) fica `UNMATCHED`; tratar essa ordem fica para `dock_gateway`/evolução futura.
+
+## dock_gateway
+
+* A api precisa de chamar a entrada de eventos, mas `dock_gateway.internal` é privado (FF-04a); por isso há `dock_gateway.port` (`DockEventIngestion`, `DockEventSubmission`, `IngestOutcome`), embora a árvore do §7.2 só mostre `{internal,persistence}` (o §7.2.1 permite `port`).
+* Os endpoints `POST /dock-events*` (8 e 9) não estão na tabela do §7.3; assumiu-se um evento único (`ingest`) e um lote para o reenvio do buffer offline (`ingestBatch`, máx. 1000 eventos).
+* `DockEventRecord` não tem `commandId`; `DockEventSubmission` leva-o à parte (só usado em `BIKE_RELEASED`, como o `tripId` de `startTrip`).
+* A escrita em station_inventory usa a porta `station_inventory.port.DockOccupancyPort` (só o contrato); station_inventory não pode usar dock_gateway, por isso a interface fica no módulo dono. Até haver implementação, o contexto Spring não arranca (como já acontecia com outras portas).
+* As operações de `DockOccupancyPort` definem estado (livre/ocupada/bloqueada) e levam `occurredAt`, para serem seguras de repetir e para o dono poder ignorar atualizações mais antigas.
+* `DOCK_MAINTENANCE_LOCKED`/`UNLOCKED` só bloqueiam/desbloqueiam a doca em station_inventory; fleet_health não é usado (permissão allowed-to-use fica por usar).
+* Desduplicação (ADR-004 §2): tabela `dock_processed_events` com `event_id` PRIMARY KEY e `INSERT OR IGNORE`; registo, station_inventory e trip_management correm na mesma transação, por isso uma falha desfaz o registo e o reenvio volta a processar o evento.
+* No encaixe, a doca é marcada ocupada antes de `closeTrip` (§4: consolidar antes da cobrança); na saída, `startTrip` é chamado antes de `markDockFree` (ordem de §7.4.1).
+* A doca é atualizada mesmo quando o evento fica `UNMATCHED`: a bicicleta saiu/entrou fisicamente, haja ou não viagem.
+* Um `BIKE_RELEASED` sem `commandId` fica `UNMATCHED` sem chamar trip_management.
+* Um `DUPLICATE` devolvido por trip_management (segunda linha de defesa) é também `DUPLICATE` para a doca.
+* Um lote é aplicado por ordem de `occurredAt`, cada evento na sua transação (não bloqueia o único escritor do SQLite); os resultados voltam pela ordem recebida. Isto resolve o `BIKE_DOCKED` antes do `BIKE_RELEASED` dentro do mesmo lote, mas não entre pedidos distintos.
+* Se um evento de um lote falhar, a exceção propaga-se; os já processados ficam registados e no reenvio do lote dão `DUPLICATE`.
+* O comando de abertura é simulado (`SimulatedDockCommandSender`): só fica no log, sem cliente HTTP (FF-14a) nem tabela de comandos; só falha com `VALIDATION` se faltar `dockId`/`tripId`.
+* `received_at` (hora do servidor, via `Clock`) só serve para a purga; as durações usam `occurredAt` (ADR-004 §5).
+* A purga corre de hora a hora (intervalo não especificado); a retenção vem de `lisboapedala.dock.processed-event-retention-hours` (48 por omissão).
