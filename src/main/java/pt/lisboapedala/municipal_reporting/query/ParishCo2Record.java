@@ -1,4 +1,4 @@
-package pt.lisboapedala.municipal_reporting.internal;
+package pt.lisboapedala.municipal_reporting.query;
 
 import java.math.BigDecimal;
 import java.util.Objects;

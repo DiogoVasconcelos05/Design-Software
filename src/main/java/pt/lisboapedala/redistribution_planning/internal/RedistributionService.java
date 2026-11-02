@@ -3,6 +3,7 @@ package pt.lisboapedala.redistribution_planning.internal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import pt.lisboapedala.redistribution_planning.query.RedistributionQuery;
 import pt.lisboapedala.redistribution_planning.query.RouteStop;
 import pt.lisboapedala.redistribution_planning.query.VanRoute;
 import pt.lisboapedala.station_inventory.query.StationOccupancy;
@@ -18,7 +19,7 @@ import java.util.Objects;
  * Não utiliza persistência (BD) nem anotações transacionais, garantindo uma execução pura em memória (FF-07, FF-08).
  */
 @Service
-public class RedistributionService {
+public class RedistributionService implements RedistributionQuery {
 
     private static final Logger log = LoggerFactory.getLogger(RedistributionService.class);
 
@@ -35,6 +36,7 @@ public class RedistributionService {
      * @param vanCapacity Capacidade máxima de transporte de cada carrinha (> 0).
      * @return Lista de rotas sugeridas por carrinha.
      */
+    @Override
     public List<VanRoute> suggestRoutes(int vans, int vanCapacity) {
         if (vans <= 0) {
             throw new IllegalArgumentException("O número de carrinhas deve ser superior a 0");
