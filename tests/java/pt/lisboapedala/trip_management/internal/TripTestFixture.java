@@ -21,6 +21,9 @@ import pt.lisboapedala.common.valueobject.PassType;
 import pt.lisboapedala.common.valueobject.PassValidation;
 import pt.lisboapedala.common.valueobject.PassValidationStatus;
 import pt.lisboapedala.common.valueobject.TripSummary;
+import pt.lisboapedala.payment_invoicing.port.InvoiceView;
+import pt.lisboapedala.payment_invoicing.port.PaymentMethodKind;
+import pt.lisboapedala.payment_invoicing.port.PaymentService;
 import pt.lisboapedala.trip_management.persistence.JdbcTripRepository;
 
 /**
@@ -50,11 +53,24 @@ final class TripTestFixture {
                 new DriverManagerDataSource("jdbc:sqlite:" + dir.resolve("trips.db").toAbsolutePath());
         new ResourceDatabasePopulator(new ClassPathResource("db/trip_management/schema.sql")).execute(dataSource);
         repository = new JdbcTripRepository(JdbcClient.create(dataSource));
-        dispatcher = new TripBillingDispatcher(summary -> {
-            if (paymentFailure != null) {
-                throw paymentFailure;
+        dispatcher = new TripBillingDispatcher(new PaymentService() {
+            @Override
+            public void charge(TripSummary summary) {
+                if (paymentFailure != null) {
+                    throw paymentFailure;
+                }
+                charges.add(summary);
             }
-            charges.add(summary);
+
+            @Override
+            public void registerPaymentMethod(String userId, PaymentMethodKind kind, String token) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public List<InvoiceView> invoicesOf(String userId, int limit, int offset) {
+                throw new UnsupportedOperationException();
+            }
         }, repository);
         service = new DefaultTripService(repository, credential -> validation,
                 (dockId, tripId) -> {

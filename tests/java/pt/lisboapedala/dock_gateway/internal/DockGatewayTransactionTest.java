@@ -40,6 +40,8 @@ import pt.lisboapedala.dock_gateway.port.DockEventIngestion;
 import pt.lisboapedala.dock_gateway.port.DockEventSubmission;
 import pt.lisboapedala.dock_gateway.port.IngestOutcome;
 import pt.lisboapedala.identity_access.port.CredentialValidator;
+import pt.lisboapedala.payment_invoicing.port.InvoiceView;
+import pt.lisboapedala.payment_invoicing.port.PaymentMethodKind;
 import pt.lisboapedala.payment_invoicing.port.PaymentService;
 import pt.lisboapedala.trip_management.internal.DefaultTripService;
 import pt.lisboapedala.trip_management.internal.TripBillingDispatcher;
@@ -165,7 +167,22 @@ class DockGatewayTransactionTest {
 
         @Bean
         PaymentService paymentService() {
-            return charges::add;
+            return new PaymentService() {
+                @Override
+                public void charge(TripSummary summary) {
+                    charges.add(summary);
+                }
+
+                @Override
+                public void registerPaymentMethod(String userId, PaymentMethodKind kind, String token) {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public List<InvoiceView> invoicesOf(String userId, int limit, int offset) {
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
 
         @Bean
