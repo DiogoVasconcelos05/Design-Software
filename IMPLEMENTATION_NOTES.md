@@ -45,3 +45,25 @@ Suposições feitas pela IA (uma linha cada), por módulo.
 * O comando de abertura é simulado (`SimulatedDockCommandSender`): só fica no log, sem cliente HTTP (FF-14a) nem tabela de comandos; só falha com `VALIDATION` se faltar `dockId`/`tripId`.
 * `received_at` (hora do servidor, via `Clock`) só serve para a purga; as durações usam `occurredAt` (ADR-004 §5).
 * A purga corre de hora a hora (intervalo não especificado); a retenção vem de `lisboapedala.dock.processed-event-retention-hours` (48 por omissão).
+
+## payment_invoicing
+
+* `PaymentService` passou a ter também `registerPaymentMethod` e `invoicesOf` (endpoints 3 e 7 do §7.3); as portas falsas nos testes de trip_management e dock_gateway foram atualizadas em conformidade.
+* O cálculo do preço usa a porta `tariff_pricing.port.TariffPricing` com o `record` `PricingRequest` (docs/02, Conascência 3); só o contrato foi criado. `tariff_pricing.internal` é privado (FF-04a), por isso há `tariff_pricing.port`, embora a árvore do §7.2 só mostre `internal` (o §7.2.1 permite `port`). Até haver implementação, o contexto Spring não arranca (como já acontecia com outras portas).
+* `PricingRequest` fica em `tariff_pricing.port` e não em `common`, para manter `common` pequeno (ADR-001, ADR-005).
+* O preço vem em euros (`BigDecimal`) e é guardado em cêntimos (`INTEGER`), arredondado ao cêntimo com `HALF_UP`; os valores incluem IVA e a decomposição do IVA fica fora do âmbito.
+* Idempotência (ADR-004 §4): `payment_charges.trip_id` é PRIMARY KEY e `invoices.trip_id` é UNIQUE (`INSERT OR IGNORE`); um segundo `charge` para a mesma viagem não faz nada.
+* `charge` regista a cobrança e faz logo a primeira tentativa; depois de registada, uma recusa do PSP ou uma falha da AT não se propagam a trip_management (o outbox de payment_invoicing trata dos reenvios). Só uma falha a registar a cobrança se propaga, e aí o outbox de trip_management volta a chamar `charge`.
+* `charge` tem `@Transactional(NOT_SUPPORTED)` e todas as escritas passam por `PaymentLedger` com `REQUIRES_NEW`: é chamado na fase after-commit do fecho, quando a transação original ainda está ligada à thread.
+* O PSP é chamado fora de qualquer transação (FF-14b) com o `tripId` como chave de idempotência, por isso tentativas repetidas ou concorrentes (pedido inicial e job) nunca cobram duas vezes; não há estado intermédio "em curso".
+* Marcar a cobrança `PAID` e emitir a fatura acontecem na mesma transação local, para não haver cobrança paga sem fatura; a comunicação à AT é feita a seguir, fora da transação.
+* Uma viagem com valor 0 fica `PAID` sem chamar o PSP e sem fatura.
+* Sem meio de pagamento registado, a cobrança fica `FAILED` e conta como tentativa; o job volta a tentar (ex.: depois de o utilizador registar um meio). payment_invoicing não pode usar identity_access, por isso o `userId` não é validado contra os utilizadores.
+* Estados da cobrança: `PENDING`, `PAID`, `FAILED`. O job retoma `PENDING`/`FAILED` com menos de `lisboapedala.payment.max-attempts` tentativas (5 por omissão) e paradas há mais de um intervalo; esgotadas as tentativas, a cobrança fica `FAILED` para tratamento manual.
+* As faturas com `at_status = PENDING` são reenviadas sem limite de tentativas (obrigação fiscal); a AT é idempotente pelo número da fatura.
+* O intervalo do job vem de `lisboapedala.payment.retry-interval-seconds` (60 s por omissão), propriedade não especificada, por analogia com `lisboapedala.trip.billing-retry-interval-seconds`.
+* O número da fatura é uma série sequencial única (`invoice_number INTEGER PRIMARY KEY AUTOINCREMENT`), apresentada como `FT LP/<n>`.
+* As faturas nunca são apagadas (retenção de 10 anos, FF-23); depois de emitidas só mudam os campos da comunicação à AT.
+* PSP e AT são simulados (`SimulatedPaymentGateway`, `SimulatedTaxAuthority`): aceitam tudo, só ficam no log e não usam cliente HTTP; atrás das interfaces `PaymentGateway` e `TaxAuthorityGateway` para poderem ser trocados por clientes reais (só payment_invoicing pode tê-los, FF-14a).
+* O meio de pagamento é um por utilizador (registar outro substitui o anterior); o `token` é a referência opaca do PSP, nunca o número do cartão, e não vai para o log.
+* `invoicesOf` aceita `limit` entre 1 e 100 e `offset >= 0`; fora disso dá `VALIDATION`. Ordena da mais recente para a mais antiga.
