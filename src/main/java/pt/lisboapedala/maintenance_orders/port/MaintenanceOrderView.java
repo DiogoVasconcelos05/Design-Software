@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Vista imutável de uma ordem de manutenção (endpoints 13 e 14 de ARCHITECTURE.md §7.3).
+ * Vista imutável de uma ordem de manutenção (endpoints 13 a 17 de ARCHITECTURE.md §7.3).
  *
  * @param orderId      Identificador da ordem.
  * @param bikeId       Bicicleta avariada.
@@ -15,6 +15,9 @@ import java.util.UUID;
  * @param reportedBy   Quem reportou.
  * @param technicianId Técnico atribuído; null enquanto {@code OPEN}.
  * @param openedAt     Instante de abertura.
+ * @param startedAt    Instante em que a reparação começou; null antes de {@code IN_PROGRESS}.
+ * @param completedAt  Instante de conclusão; null antes de {@code COMPLETED}.
+ * @param notes        Notas do técnico na conclusão; null antes de {@code COMPLETED}.
  */
 public record MaintenanceOrderView(
         UUID orderId,
@@ -25,6 +28,9 @@ public record MaintenanceOrderView(
         String description,
         String reportedBy,
         String technicianId,
-        Instant openedAt
+        Instant openedAt,
+        Instant startedAt,
+        Instant completedAt,
+        String notes
 ) {
 }
