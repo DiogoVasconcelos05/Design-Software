@@ -37,10 +37,34 @@
 5. **Relatórios:** `municipal_reporting` apenas realiza operações de leitura (*read-only*) sobre os dados de `trip_management` e `station_inventory`.
 6. **Verificação Automatizada:** Estas regras são validadas pelas *fitness functions* em `ArchUnit` localizadas em `src/test/java/pt/lisboapedala/architecture/`.
 
-### 2.1 Regras Estritas de ArchUnit (Fitness Functions)
-1. **[FF-04b] Isolamento de Persistence:** O pacote `*.persistence` só pode ser importado e acedido por classes no pacote `*.internal` do próprio módulo.
-2. **[FF-11] Pacotes Autorizados:** Nenhum subpacote fora de `query`, `port`, `internal` e `persistence` é permitido dentro dos módulos de domínio (proibido criar `domain/`, `service/`, `controller/`).
-3. **[FF-16] Injeção do Clock:** É proibido chamar `Instant.now()`, `LocalDate.now()` ou `LocalDateTime.now()` diretamente. O tempo deve ser obtido obrigatoriamente através de uma dependência injetada de `java.time.Clock` (ex.: `Instant.now(clock)`).
+### 2.1 Regras Estritas de ArchUnit e Fitness Functions (FF-01 a FF-25)
+
+Toda a geração de código DEVE obedecer estritamente às seguintes restrições automatizadas (validadas em `src/test/java/pt/lisboapedala/architecture/`):
+
+1. **[FF-01] Matriz Allowed-to-Use:** Cada módulo só importa dependências explicitamente autorizadas na matriz de acoplamento e o pacote `common`. NENHUM módulo de domínio pode importar o pacote `pt.lisboapedala.api`.
+2. **[FF-02] Isolamento do Comum:** O pacote `common` não pode ter nenhuma dependência de outros módulos da aplicação.
+3. **[FF-03] Ausência de Ciclos:** É proibida a existência de dependências circulares entre módulos de domínio.
+4. **[FF-04 / FF-04b] Encapsulamento de Pacotes:** Os pacotes `internal` e `persistence` são estritamente privados ao seu módulo. O pacote `persistence` só pode ser acedido por classes do subpacote `internal` do próprio módulo.
+5. **[FF-05] Pureza das Interfaces Públicas:** Os pacotes `port` e `query` não podem importar nem depender de classes dos pacotes `internal` ou `persistence` do mesmo módulo.
+6. **[FF-06] Contrato de Consulta (`..query..`):** O subpacote `query` só pode conter interfaces e `record`s imutáveis. Nenhum método de consulta em `query` pode ter o tipo de retorno `void`.
+7. **[FF-07] Acesso por Consulta em Relatórios:** Os módulos `municipal_reporting` e `redistribution_planning` só podem aceder a dados de outros módulos de domínio através das respetivas interfaces em `..query..`.
+8. **[FF-08] Verificação "Read-Only" sem Persistência:** É proibido o uso de JDBC, transações (`@Transactional`) ou clientes HTTP nos módulos `municipal_reporting`, `redistribution_planning`, `tariff_pricing`, `common` e `api`.
+9. **[FF-09] Limite e Pureza de `common`:** O pacote `common` só pode conter `record`s, `enum`s, `interface`s e exceções puras. Proibido qualquer dependência ou anotação do ecossistema Spring.
+10. **[FF-10] Imutabilidade do Tarifário:** O módulo `tariff_pricing` só pode depender de `common` e do JDK puro (sem estado mutável e com todos os campos `final`).
+11. **[FF-11] Árvore de Pacotes Autorizados:** Cada subpacote em `pt.lisboapedala.<modulo>` só pode conter as pastas `query`, `port`, `internal` e `persistence` (`api`: `rest`, `cli`, `config`). Proibida a criação de pastas como `domain`, `service`, `controller`, etc.
+12. **[FF-12] Sem JPA / Injeção por Construtor:** Proibido o uso de anotações JPA (`@Entity`, `@Table`) ou Spring Data JPA. Toda a persistência usa Spring `JdbcClient`/`JdbcTemplate` e a injeção de dependências deve ser feita exclusivamente por construtor.
+13. **[FF-14] Isolamento de Clientes HTTP:** Apenas o módulo `payment_invoicing` pode utilizar clientes HTTP externos. Métodos com anotação `@Transactional` não podem realizar chamadas I/O de rede.
+14. **[FF-15] Desacoplamento Transacional de Cobrança:** Métodos `@Transactional` em `trip_management` e `dock_gateway` não podem invocar síncronamente o serviço `payment_invoicing` (a cobrança ocorre após o commit via outbox/eventos).
+15. **[FF-16] Injeção de Tempo (Clock):** PROIBIDO invocar métodos estáticos como `Instant.now()`, `LocalDateTime.now()` ou `System.currentTimeMillis()`. Todo o tempo deve ser obtido obrigatoriamente através de uma dependência injetada de `java.time.Clock`.
+16. **[FF-17] Ausência de Estado Mutável Compartilhado:** Proibida a existência de campos estáticos mutáveis e campos de instância mutáveis em Spring Beans (`@Component`, `@Service`).
+17. **[FF-18] Proteção do RGPD:** Os `record`s exported nos pacotes `..query..` não podem conter campos que identifiquem diretamente o utilizador ou o percurso detalhado da viagem.
+18. **[FF-19] Observabilidade e Logging:** Proibida a utilização de `System.out` e `System.err` fora do pacote `api.cli`. Todo o registo deve utilizar a fachada de logging SLF4J.
+19. **[FF-20] Importações Limpas:** Proibido o uso de importações com cardinalidade curinga (`import pt.lisboapedala.*`).
+20. **[FF-21] Isolamento de Esquema SQL:** NENHUM ficheiro SQL ou classe Java pode referenciar tabelas de outro domínio nem utilizar restrições de `FOREIGN KEY` entre tabelas de módulos distintos.
+21. **[FF-22] Garantia SQL de Idempotência:** Os ficheiros `schema.sql` dos módulos `dock_gateway` e `trip_management` DEVEM ter restrições `UNIQUE` ou `PRIMARY KEY` sobre a coluna `eventId`.
+22. **[FF-23] Imutabilidade de Faturas Fiscais:** Proibida a utilização de instruções `DELETE FROM` ou `DROP TABLE` em qualquer tabela pertencente ao domínio `payment_invoicing`.
+23. **[FF-24] Métrica de Instabilidade e Acoplamento:** Execução automatizada que calcula e valida os índices de instabilidade ($I = \frac{Ce}{Ca + Ce}$) e garante o Princípio das Dependências Estáveis (SDP).
+24. **[FF-25] Teste de Canários e Deteção de Violações:** Conjunto de testes canário em `src/test/java/canary/` que garante a eficácia das regras ArchUnit ao forçar a falha no caso de atenuação acidental de regras.
 
 ---
 
