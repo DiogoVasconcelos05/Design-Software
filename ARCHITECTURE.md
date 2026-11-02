@@ -37,6 +37,11 @@
 5. **Relatórios:** `municipal_reporting` apenas realiza operações de leitura (*read-only*) sobre os dados de `trip_management` e `station_inventory`.
 6. **Verificação Automatizada:** Estas regras são validadas pelas *fitness functions* em `ArchUnit` localizadas em `src/test/java/pt/lisboapedala/architecture/`.
 
+### 2.1 Regras Estritas de ArchUnit (Fitness Functions)
+1. **[FF-04b] Isolamento de Persistence:** O pacote `*.persistence` só pode ser importado e acedido por classes no pacote `*.internal` do próprio módulo.
+2. **[FF-11] Pacotes Autorizados:** Nenhum subpacote fora de `query`, `port`, `internal` e `persistence` é permitido dentro dos módulos de domínio (proibido criar `domain/`, `service/`, `controller/`).
+3. **[FF-16] Injeção do Clock:** É proibido chamar `Instant.now()`, `LocalDate.now()` ou `LocalDateTime.now()` diretamente. O tempo deve ser obtido obrigatoriamente através de uma dependência injetada de `java.time.Clock` (ex.: `Instant.now(clock)`).
+
 ---
 
 ## 3. Características Condutoras e Impacto no Código
@@ -122,6 +127,12 @@
         ├── <modulo>/...               # testes unitários por módulo
         └── integration/{Us1...,Us2...,Us4...}Test.java
 ```
+### 7.2.1 Árvore de Pacotes Estrita por Módulo
+Cada subpacote em `pt.lisboapedala.<modulo>` só pode conter uma das seguintes pastas:
+- `query/`       : Interfaces e View DTOs de leitura (público)
+- `port/`        : Interfaces/Portas de escrita expostas a outros módulos (público)
+- `internal/`    : Lógica de negócio, entidades de domínio e serviços de aplicação (privado ao módulo)
+- `persistence/` : Entidades SQL, Mappers e Repositórios `JdbcClient` (privado ao módulo, acessível APENAS por `internal`)
 
 ### 7.3 API HTTP
 
