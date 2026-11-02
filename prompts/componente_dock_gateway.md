@@ -11,5 +11,5 @@ Your goal is to generate the component dock_gateway using the specification foun
 Make a PR when you're done.
 
 # Resultado
-* **Estado**: Por rever
+* **Estado**: Aceite
 * **Porquê**: Todas as regras FF-01 a FF-19 do ArchUnit, FF-20, FF-21, FF-22a (antes a falhar), FF-22b e FF-24 passam, tal como os 14 testes do módulo (incluindo a verificação da ADR-004 com trip_management real). Continuam a falhar as 3 verificações que dependem de outros módulos (`todosOsModulosTemPeloMenosUmaClasse`, `umUnicoTratadorDeErros`, FF-23), que já falhavam antes. As suposições estão em `IMPLEMENTATION_NOTES.md`.

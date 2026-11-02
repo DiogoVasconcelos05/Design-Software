@@ -11,5 +11,5 @@ Your goal is to generate the component trip_management using the specification f
 Make a PR when you're done.
 
 # Resultado
-* **Estado**: Por rever
+* **Estado**: Aceite
 * **Porquê**: Todas as regras FF-01 a FF-19 do ArchUnit, FF-20, FF-21, FF-22b, FF-24 e FF-25 passam, tal como os 23 testes do módulo. Continuam a falhar as 4 verificações que dependem de outros módulos (`todosOsModulosTemPeloMenosUmaClasse`, `umUnicoTratadorDeErros`, FF-22a, FF-23), que já falhavam antes. As suposições estão em `IMPLEMENTATION_NOTES.md`.
