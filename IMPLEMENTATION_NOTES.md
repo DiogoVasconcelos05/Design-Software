@@ -77,3 +77,18 @@ Suposições feitas pela IA (uma linha cada), por módulo.
 * Um município vizinho é outra instância de `TariffSchedule` (ADR-003); `PricingRequest` não leva o município porque nenhum fluxo do §7.4 o fornece. Escolher o tarifário por município fica para quando houver essa informação na viagem.
 * A duração chega já arredondada para cima ao minuto (`trip_management`); 0 minutos dá 0 € (nenhum bloco começado), que `payment_invoicing` trata como `PAID` sem PSP nem fatura.
 * O valor devolvido tem no máximo 2 casas decimais, mas o arredondamento ao cêntimo continua a ser de `payment_invoicing` (`HALF_UP`).
+
+## fleet_health
+
+* A api precisa de chamar a entrada de telemetria, mas `fleet_health.internal` é privado (FF-04a); por isso há `fleet_health.port` (`TelemetryIngestion`, `TelemetryReading`), embora a árvore do §7.2 só mostre `{internal,persistence}` (o §7.2.1 permite `port`). `TelemetryService` (§7.4.3) é a implementação, em `internal`.
+* A abertura de ordens usa a porta `maintenance_orders.port.MaintenanceService` (`open`, com `OpenMaintenanceOrder`, `FaultType`, `MaintenanceOrigin`, `MaintenanceOrderView`, `MaintenanceOrderStatus`); só os contratos foram criados, a implementação fica para maintenance_orders. Até haver implementação, o contexto Spring não arranca (como já acontecia com outras portas).
+* `MaintenanceService.open` devolve `MaintenanceOrderView` porque o endpoint 13 responde com ela; os campos e os estados (`OPEN`, `ASSIGNED`, `IN_PROGRESS`, `COMPLETED`) foram deduzidos dos endpoints 13 a 17 e podem ser ajustados por maintenance_orders.
+* O conteúdo de `TelemetryReading` não está especificado; assumiu-se `bikeId`, `occurredAt` (hora da bicicleta), `batteryTemperatureCelsius` e `brakeFault` (autodiagnóstico), o mínimo para as falhas de bateria e travões da US-2.
+* Anomalias detetadas: `BATTERY_OVERHEAT` (temperatura ≥ `lisboapedala.fleet.battery-max-temperature-celsius`, 60 °C por omissão, valor provisório) → `FaultType.BATTERY`; `BRAKE_FAULT` (`brakeFault = true`) → `FaultType.BRAKES`. `FaultType` tem também `OTHER` para reportes de utilizadores.
+* Cada deteção é um bean `AnomalyRule` (função pura da leitura); acrescentar uma deteção é acrescentar uma regra e um valor em `AnomalyType`, sem mexer em `TelemetryService`. Duas regras para o mesmo tipo falham no arranque.
+* "Anomalia nova" (§7.4.3) é uma anomalia que não está ativa para a bicicleta: a tabela `fleet_active_anomalies` tem `PRIMARY KEY (bike_id, anomaly_type)` e `INSERT OR IGNORE`, por isso cada anomalia abre no máximo uma ordem enquanto estiver ativa, mesmo com várias réplicas. maintenance_orders continua a garantir uma só ordem ativa por `(bikeId, faultType)`.
+* Uma anomalia fica resolvida quando uma leitura mais recente do que a deteção (`occurredAt`) já não a mostra; se reaparecer, pede nova ordem. Uma leitura antiga reenviada fora de ordem não a resolve.
+* A telemetria não é guardada: cada leitura faz só uma consulta indexada às anomalias ativas e só escreve quando o estado muda, para que as leituras a cada 30 s não disputem o único escritor do SQLite com as viagens (cenário de escalabilidade em docs/01).
+* Registar a anomalia e abrir a ordem acontecem na mesma transação local (`AnomalyRecorder`); se a abertura falhar, nada fica registado e a leitura seguinte da bicicleta volta a tentar, sem precisar de job de reenvio.
+* `dock_gateway` não usa fleet_health (a permissão allowed-to-use continua por usar): a telemetria chega pelo endpoint 10, não pelos eventos das docas.
+* Não é usado `Clock`: as horas vêm de `occurredAt` da leitura (como em ADR-004 §5 para as docas).
