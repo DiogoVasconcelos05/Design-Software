@@ -11,5 +11,5 @@ Your goal is to generate the component maintenance_orders using the specificatio
 Make a PR when you're done.
 
 # Resultado
-* **Estado**: Por rever
+* **Estado**: Aceite
 * **Porquê**: Todas as fitness functions aplicáveis passam, tal como os 14 testes novos do módulo (ciclo de vida, uma só ordem ativa por `(bikeId, faultType)`, transições repetidas e concorrentes, e a ordem desfeita com a transação de quem a abre). Continuam a falhar as 2 verificações que dependem de outros módulos (`todosOsModulosTemPeloMenosUmaClasse`, com `redistribution_planning`, `municipal_reporting` e `api`, e `umUnicoTratadorDeErros`), que já falhavam antes. A porta `MaintenanceService` e a `MaintenanceOrderView` foram alargadas para os endpoints 14 a 17; as suposições estão em `IMPLEMENTATION_NOTES.md`.

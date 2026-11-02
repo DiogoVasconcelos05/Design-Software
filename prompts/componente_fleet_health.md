@@ -11,5 +11,5 @@ Your goal is to generate the component fleet_health using the specification foun
 Make a PR when you're done.
 
 # Resultado
-* **Estado**: Por rever
+* **Estado**: Aceite
 * **Porquê**: Todas as fitness functions aplicáveis passam, tal como os 14 testes novos do módulo (incluindo a anulação do registo da anomalia quando a ordem não pode ser aberta). Continuam a falhar as 2 verificações que dependem de outros módulos (`todosOsModulosTemPeloMenosUmaClasse`, agora só com `redistribution_planning`, `municipal_reporting` e `api`, e `umUnicoTratadorDeErros`), que já falhavam antes. Só foi criado o contrato `maintenance_orders.port.MaintenanceService`; o conteúdo da leitura de telemetria e o limite de temperatura são suposições, ver `IMPLEMENTATION_NOTES.md`.
