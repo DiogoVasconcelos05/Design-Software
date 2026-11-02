@@ -8,11 +8,13 @@ import java.util.Objects;
  *
  * @param userId   Identificador do utilizador titular do passe.
  * @param status   Estado da validação do passe.
+ * @param passType Tipo de passe do utilizador; obrigatório quando o passe é válido.
  * @param details  Informação detalhada suplementar sobre o resultado da validação.
  */
 public record PassValidation(
         String userId,
         PassValidationStatus status,
+        PassType passType,
         String details
 ) {
     public PassValidation {
@@ -21,6 +23,9 @@ public record PassValidation(
         
         if (userId.isBlank()) {
             throw new IllegalArgumentException("userId não pode estar em branco");
+        }
+        if (status == PassValidationStatus.VALID && passType == null) {
+            throw new IllegalArgumentException("passType é obrigatório quando o passe é válido");
         }
     }
 
