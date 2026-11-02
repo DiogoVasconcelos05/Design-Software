@@ -11,5 +11,5 @@ Your goal is to generate the component payment_invoicing using the specification
 Make a PR when you're done.
 
 # Resultado
-* **Estado**: Por rever
+* **Estado**: Aceite
 * **Porquê**: Todas as regras FF-01 a FF-19 do ArchUnit, FF-20, FF-21, FF-22a, FF-22b, FF-23 (antes a falhar) e FF-24 passam, tal como os 14 testes do módulo (incluindo a verificação da ADR-004 com dock_gateway e trip_management reais: 1 viagem, 1 cobrança e 1 fatura). Continuam a falhar as 2 verificações que dependem de outros módulos (`todosOsModulosTemPeloMenosUmaClasse`, `umUnicoTratadorDeErros`), que já falhavam antes. As suposições estão em `IMPLEMENTATION_NOTES.md`.
