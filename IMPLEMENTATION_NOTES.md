@@ -92,3 +92,20 @@ Suposições feitas pela IA (uma linha cada), por módulo.
 * Registar a anomalia e abrir a ordem acontecem na mesma transação local (`AnomalyRecorder`); se a abertura falhar, nada fica registado e a leitura seguinte da bicicleta volta a tentar, sem precisar de job de reenvio.
 * `dock_gateway` não usa fleet_health (a permissão allowed-to-use continua por usar): a telemetria chega pelo endpoint 10, não pelos eventos das docas.
 * Não é usado `Clock`: as horas vêm de `occurredAt` da leitura (como em ADR-004 §5 para as docas).
+
+## maintenance_orders
+
+* A api precisa de chamar o serviço, mas `maintenance_orders.internal` é privado (FF-04a); por isso o contrato fica em `maintenance_orders.port` (já criado por fleet_health), embora a árvore do §7.2 só mostre `{internal,persistence}` (o §7.2.1 permite `port`). `DefaultMaintenanceService` é a implementação, em `internal`.
+* `MaintenanceService` ganhou `list`, `assign`, `start` e `complete` (endpoints 14 a 17 do §7.3); a porta falsa nos testes de fleet_health foi atualizada em conformidade.
+* Os endpoints 15 a 17 respondem só `200`; os métodos devolvem `MaintenanceOrderView` para a api a poder enviar se quiser.
+* `MaintenanceOrderView` ganhou `startedAt`, `completedAt` e `notes` (as notas do endpoint 17 não tinham onde aparecer); fleet_health não lê a vista, só o fake dos testes mudou.
+* Ciclo de vida: `OPEN -> ASSIGNED -> IN_PROGRESS -> COMPLETED`; `MaintenanceOrder` (em `internal`) é uma máquina de estados imutável, como `Trip`.
+* Repetir uma transição já aplicada (mesmo técnico, `start` em `IN_PROGRESS`, `complete` em `COMPLETED`) devolve a ordem sem efeitos (e sem trocar as notas); uma transição fora de ordem dá `CONFLICT` e uma ordem inexistente dá `NOT_FOUND`.
+* Uma ordem `ASSIGNED` pode ser reatribuída a outro técnico; depois de `IN_PROGRESS` já não.
+* Não há cancelamento nem passagem direta `OPEN -> IN_PROGRESS`: nenhum endpoint do §7.3 os prevê.
+* "Ordem ativa" (§7.4.3) é qualquer ordem que não esteja `COMPLETED`; a unicidade por `(bike_id, fault_type)` é garantida por um índice único parcial (`WHERE status <> 'COMPLETED'`) com `INSERT OR IGNORE`, por isso vale mesmo com várias réplicas. Um segundo `open` devolve a ordem ativa existente, mesmo que venha de outra origem (ex.: reporte de utilizador depois da deteção automática).
+* `open` usa `@Transactional` com propagação por omissão: chamado por fleet_health junta-se à transação do registo da anomalia, para que ambos fiquem gravados ou nenhum.
+* Cada transição grava com `WHERE status = <estado lido>`; se outro pedido mudou a ordem entretanto, dá `CONFLICT` em vez de gravar por cima.
+* `GET /maintenance-orders` sem `status` devolve as ordens ativas; com `status` filtra por esse estado. Ordenadas da mais antiga para a mais recente (fila do técnico), sem paginação porque o endpoint 14 não a prevê.
+* `bikeId` e `reportedBy` são obrigatórios (`VALIDATION`); `description` e `notes` são opcionais. `technicianId` é obrigatório em `assign`; não é validado contra utilizadores, porque maintenance_orders não pode usar identity_access.
+* `openedAt`, `startedAt` e `completedAt` vêm do `Clock` injetado (FF-16): ao contrário da telemetria, estes pedidos não trazem hora de origem.

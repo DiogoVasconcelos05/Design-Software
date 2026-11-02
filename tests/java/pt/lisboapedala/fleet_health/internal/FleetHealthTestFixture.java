@@ -69,7 +69,27 @@ final class FleetHealthTestFixture {
             opened.add(command);
             return new MaintenanceOrderView(UUID.randomUUID(), command.bikeId(), command.faultType(),
                     command.origin(), MaintenanceOrderStatus.OPEN, command.description(), command.reportedBy(),
-                    null, T0);
+                    null, T0, null, null, null);
+        }
+
+        @Override
+        public List<MaintenanceOrderView> list(MaintenanceOrderStatus status) {
+            throw new UnsupportedOperationException("fleet_health só abre ordens");
+        }
+
+        @Override
+        public MaintenanceOrderView assign(UUID orderId, String technicianId) {
+            throw new UnsupportedOperationException("fleet_health só abre ordens");
+        }
+
+        @Override
+        public MaintenanceOrderView start(UUID orderId) {
+            throw new UnsupportedOperationException("fleet_health só abre ordens");
+        }
+
+        @Override
+        public MaintenanceOrderView complete(UUID orderId, String notes) {
+            throw new UnsupportedOperationException("fleet_health só abre ordens");
         }
     }
 }
