@@ -3,6 +3,9 @@ package pt.lisboapedala.municipal_reporting.internal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import pt.lisboapedala.municipal_reporting.query.MonthlyReport;
+import pt.lisboapedala.municipal_reporting.query.MonthlyReportQuery;
+import pt.lisboapedala.municipal_reporting.query.ParishCo2Record;
 import pt.lisboapedala.station_inventory.query.StationLocationRecord;
 import pt.lisboapedala.station_inventory.query.StationOccupancyQuery;
 import pt.lisboapedala.trip_management.query.TripUsageQuery;
@@ -30,10 +33,11 @@ import java.util.stream.Collectors;
  * através de {@link StationOccupancyQuery#findAllLocations()}.
  */
 @Service
-public class MonthlyReportService {
+public class MonthlyReportService implements MonthlyReportQuery {
 
     private static final Logger log = LoggerFactory.getLogger(MonthlyReportService.class);
-    private static final int PAGE_SIZE = 500;
+    // TripUsageQuery aceita limit entre 1 e 100 (IMPLEMENTATION_NOTES, trip_management)
+    private static final int PAGE_SIZE = 100;
     
     // Fator estimado de emissões evitadas: ~84 gramas de CO2 por km de bicicleta (0.084 kg/km)
     private static final BigDecimal KG_CO2_PER_KM = new BigDecimal("0.084");
@@ -61,7 +65,8 @@ public class MonthlyReportService {
      * @param yearMonth Mês a analisar (ex: 2026-10).
      * @return {@link MonthlyReport} contendo os totais agregados e o detalhe por freguesia.
      */
-    public MonthlyReport generateReport(YearMonth yearMonth) {
+    @Override
+    public MonthlyReport generate(YearMonth yearMonth) {
         Objects.requireNonNull(yearMonth, "yearMonth não pode ser nulo");
         log.info("A gerar relatório municipal para o mês: {}", yearMonth);
 
